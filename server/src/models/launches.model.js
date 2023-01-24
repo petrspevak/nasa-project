@@ -1,4 +1,7 @@
-const launches = new Map();
+const launches = require('./launches.mongo');
+const planets = require('./planets.mongo');
+
+// const launches = new Map();
 
 const launch = {
     flightNumber: 100,
@@ -11,25 +14,16 @@ const launch = {
     success: true,
 };
 
-launches.set(launch.flightNumber, launch);
+saveLaunch(launch);
 
-function getAllLaunches() {
-    return Array.from(launches.values());
+async function getAllLaunches() {
+    return await launches.find({}, { _id: 0, __v: 0 });
 }
 
-function addNewLaunch(launch) {
-    const lastFlightNumber = getAllLaunches().reduce((accumulator, currentValue) => {
-        if (currentValue.flightNumber > accumulator) {
-            return currentValue.flightNumber;
-        }
+async function addNewLaunch(launch) {
+    const newFlightNumber = await getLatestFlightNumber() + 1;
 
-        return accumulator;
-    }, 0);
-
-    const newFlightNumber = lastFlightNumber + 1;
-
-    launches.set(
-        newFlightNumber,
+    await saveLaunch(
         Object.assign(launch, {
             flightNumber: newFlightNumber,
             customers: ['ZeroTM', 'NASA'],
@@ -49,6 +43,32 @@ function deleteLaunch(id) {
     launch.success = false;
 
     return launch;
+}
+
+async function saveLaunch(launch) {
+    const planet = await planets.findOne({ kepler_name: launch.destination });
+
+    if (!planet) {
+        throw new Error('No matching planet found!');
+    }
+
+    try {
+        // await launches.updateOne({flightNumber: launch.flightNumber}, launch, {upsert: true});
+        // nevrati zpatky dalsi properties objektu v "$setOnInsert"
+        await launches.findOneAndUpdate({flightNumber: launch.flightNumber}, launch, {upsert: true});
+    } catch (err) {
+        console.log(`Failed to save launch: ${err}`);
+    }
+}
+
+async function getLatestFlightNumber() {
+    const latestLaunch = await launches.findOne({}).sort('-flightNumber');
+
+    if (!latestLaunch) {
+        return 99;
+    }
+
+    return latestLaunch['flightNumber'];
 }
 
 module.exports = {
