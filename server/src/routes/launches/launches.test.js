@@ -1,11 +1,15 @@
 const request = require('supertest');
 const app = require('../../app');
-const {mongoConnect} = require('../../services/mongo')
+const {mongoConnect, mongoDisconnect} = require('../../services/mongo')
 /* Jest se requirovat nemusi */
 
 describe('Test launches API', () => {
     beforeAll(async () => {
         await mongoConnect();
+    });
+
+    afterAll(async () => {
+        await mongoDisconnect();
     });
 
     describe('Test GET /launches', () => {
@@ -30,20 +34,20 @@ describe('Test launches API', () => {
             mission: 'Kepler Exproration X test',
             rocket: 'Explorer IS1 test',
             launchDate: 'December 11, 2035',
-            destination: 'Kepler-442 b test',
+            destination: 'Kepler-442 b',
         };
 
         const launchDataWithoutDate = {
             mission: 'Kepler Exproration X test',
             rocket: 'Explorer IS1 test',
-            destination: 'Kepler-442 b test',
+            destination: 'Kepler-442 b',
         };
 
         const launchDataWithInvalidDate = {
             mission: 'Kepler Exproration X test',
             rocket: 'Explorer IS1 test',
             launchDate: '2025-12-36',
-            destination: 'Kepler-442 b test',
+            destination: 'Kepler-442 b',
         };
 
         test('Test response to be 201 created', async () => {
