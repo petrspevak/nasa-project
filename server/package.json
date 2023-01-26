@@ -4,7 +4,7 @@
   "description": "NASA API",
   "main": "src/server.js",
   "scripts": {
-    "test": "jest --detectOpenHandles",
+    "test": "jest",
     "start": "node src/server.js",
     "watch": "nodemon src/server.js",
     "cluster": "pm2 start src/server.js -i max"

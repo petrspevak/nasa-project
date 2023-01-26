@@ -8,14 +8,10 @@ describe('Test launches API', () => {
         await mongoConnect();
     });
 
-    afterAll(async () => {
-        await mongoDisconnect();
-    });
-
-    describe('Test GET /launches', () => {
+    describe('Test GET /v1/launches', () => {
         test('Test response to be 200', async () => {
             await request(app)
-                .get('/launches')
+                .get('/v1/launches')
                 .expect(200)
                 .expect('Content-Type', /json/)
             ;
@@ -29,7 +25,7 @@ describe('Test launches API', () => {
     });
 
 
-    describe('Test POST /launches', () => {
+    describe('Test POST /v1/launches', () => {
         const completeLaunchData = {
             mission: 'Kepler Exproration X test',
             rocket: 'Explorer IS1 test',
@@ -52,7 +48,7 @@ describe('Test launches API', () => {
 
         test('Test response to be 201 created', async () => {
             const response = await request(app)
-                .post('/launches')
+                .post('/v1/launches')
                 .send(completeLaunchData)
                 .expect(201)
                 .expect('Content-Type', /json/)
@@ -68,7 +64,7 @@ describe('Test launches API', () => {
 
         test('It should catch missing required properties', async () => {
             const response = await request(app)
-                .post('/launches')
+                .post('/v1/launches')
                 .send(launchDataWithoutDate)
                 .expect(400)
                 .expect('Content-Type', /json/)
@@ -79,7 +75,7 @@ describe('Test launches API', () => {
 
         test('It should catch invalid date', async () => {
             const response = await request(app)
-                .post('/launches')
+                .post('/v1/launches')
                 .send(launchDataWithInvalidDate)
                 .expect(400)
                 .expect('Content-Type', /json/)
@@ -89,4 +85,7 @@ describe('Test launches API', () => {
         });
     });
 
+    afterAll(async () => {
+        await mongoDisconnect();
+    });
 });
