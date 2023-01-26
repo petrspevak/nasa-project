@@ -1,20 +1,47 @@
+const axios = require('axios');
+
 const launches = require('./launches.mongo');
 const planets = require('./planets.mongo');
 
-// const launches = new Map();
+const SPACEX_API_URL = 'https://api.spacexdata.com/v4/launches/query';
 
 const launch = {
-    flightNumber: 100,
-    mission: 'Kepler Exproration X',
-    rocket: 'Explorer IS1',
-    launchDate: new Date('December 27, 2030'),
-    destination: 'Kepler-442 b',
-    customers: ['ZTM', 'NASA'],
-    upcoming: true,
-    success: true,
+    flightNumber: 100, // flight_number
+    mission: 'Kepler Exproration X', // name
+    rocket: 'Explorer IS1', // rocket.name
+    launchDate: new Date('December 27, 2030'), // date_local
+    destination: 'Kepler-442 b', // not applicable
+    customers: ['ZTM', 'NASA'], // payload.customers for each payload
+    upcoming: true, // upcoming
+    success: true, // success
 };
 
 saveLaunch(launch);
+
+async function loadLaunchesData() {
+    console.log('Loading data prom SpaceX API...');
+    const response = await axios.post(SPACEX_API_URL, {
+        query: {},
+        options: {
+            populate: [
+                {
+                    path: "rocket",
+                    select: {
+                        name: 1
+                    }
+                },
+                {
+                    path: "payloads",
+                    select: {
+                        customers: 1
+                    }
+                }
+            ]
+        }
+    });
+
+    console.log(response.data);
+}
 
 async function getAllLaunches() {
     return await launches.find({}, { _id: 0, __v: 0 });
@@ -77,6 +104,7 @@ async function getLatestFlightNumber() {
 }
 
 module.exports = {
+    loadLaunchesData,
     getAllLaunches,
     addNewLaunch,
     deleteLaunch,
