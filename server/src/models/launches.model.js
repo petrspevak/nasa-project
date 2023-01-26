@@ -33,14 +33,19 @@ async function addNewLaunch(launch) {
     );
 }
 
-function deleteLaunch(id) {
-    if (!launches.has(id)) {
+async function deleteLaunch(flightNumber) {
+    const launch = await launches.findOne({ flightNumber: flightNumber });
+    if (!launch) {
         return false;
     }
 
-    const launch = launches.get(id);
     launch.upcoming = false;
     launch.success = false;
+    const aborted = await launches.updateOne({ _id: launch['_id']}, launch);
+
+    if (aborted.modifiedCount !== 1) {
+        return false;
+    }
 
     return launch;
 }

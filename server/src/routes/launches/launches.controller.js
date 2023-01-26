@@ -26,16 +26,16 @@ async function addNewLaunch(req, res) {
     return res.status(201).json(launch);
 }
 
-function deleteLaunch(req, res) {
+async function deleteLaunch(req, res) {
     const launchId = Number(req.params.id);
 
-    const deleteLaunchResult = launchesModel.deleteLaunch(launchId);
+    const deleteLaunchResult = await launchesModel.deleteLaunch(launchId);
     if (deleteLaunchResult) {
         return res.status(200).json(deleteLaunchResult);
     }
 
     return res.status(404).json({
-        error: 'Launch with this number not found',
+        error: 'Launch with this number not found or is not upcoming!',
     });
 }
 
