@@ -1,7 +1,9 @@
 const http = require('http');
-const { mongoConnect } = require('./services/mongo');
+
+require('dotenv').config(); // volam co nejdriv, aby byly promenne z .env k dispozici
 
 const app = require('./app');
+const { mongoConnect } = require('./services/mongo');
 const { loadPlanetsData } = require('./models/planets.model');
 const { loadLaunchesData } = require('./models/launches.model')
 
