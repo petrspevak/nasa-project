@@ -1,7 +1,11 @@
-const launchesModel = require('../../models/launches.model')
+const launchesModel = require('../../models/launches.model');
+const { getPagination } = require('../../services/query');
 
 async function getAllLaunches(req, res) {
-    res.status(200).json(await launchesModel.getAllLaunches());
+    const { skip, limit } = getPagination(req.query);
+    const launches = await launchesModel.getAllLaunches(skip, limit);
+
+    res.status(200).json(launches);
 }
 
 async function addNewLaunch(req, res) {

@@ -25,18 +25,20 @@ const SPACEX_SEARCH_DATA = {
     }
 };
 
-const launch = {
-    flightNumber: 100, // flight_number
-    mission: 'Kepler Exproration X', // name
-    rocket: 'Explorer IS1', // rocket.name
-    launchDate: new Date('December 27, 2030'), // date_local
-    destination: 'Kepler-442 b', // not applicable
-    customers: ['ZTM', 'NASA'], // payload.customers for each payload
-    upcoming: true, // upcoming
-    success: true, // success
-};
 
-saveLaunch(launch);
+// dal tenhle launch nepotrebuju
+// const launch = {
+//     flightNumber: 100, // flight_number
+//     mission: 'Kepler Exproration X', // name
+//     rocket: 'Explorer IS1', // rocket.name
+//     launchDate: new Date('December 27, 2030'), // date_local
+//     destination: 'Kepler-442 b', // not applicable
+//     customers: ['ZTM', 'NASA'], // payload.customers for each payload
+//     upcoming: true, // upcoming
+//     success: true, // success
+// };
+//
+// saveLaunch(launch);
 
 
 async function loadLaunchesData() {
@@ -78,8 +80,13 @@ async function loadLaunchesData() {
     }
 }
 
-async function getAllLaunches() {
-    return await launches.find({}, { _id: 0, __v: 0 });
+async function getAllLaunches(skip = 0, limit = 0) {
+    return await launches
+        .find({}, { _id: 0, __v: 0 })
+        .sort('flightNumber')
+        .skip(skip)
+        .limit(limit)
+    ;
 }
 
 async function addNewLaunch(launch) {
