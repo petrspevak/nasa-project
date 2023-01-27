@@ -4,6 +4,26 @@ const launches = require('./launches.mongo');
 const planets = require('./planets.mongo');
 
 const SPACEX_API_URL = 'https://api.spacexdata.com/v4/launches/query';
+const SPACEX_SEARCH_DATA = {
+    query: {},
+    options: {
+        pagination: false,
+        populate: [
+            {
+                path: "rocket",
+                select: {
+                    name: 1
+                }
+            },
+            {
+                path: "payloads",
+                select: {
+                    customers: 1
+                }
+            }
+        ]
+    }
+};
 
 const launch = {
     flightNumber: 100, // flight_number
@@ -18,32 +38,30 @@ const launch = {
 
 saveLaunch(launch);
 
+
 async function loadLaunchesData() {
-    console.log('Loading data prom SpaceX API...');
-    const response = await axios.post(SPACEX_API_URL, {
-        query: {},
-        options: {
-            populate: [
-                {
-                    path: "rocket",
-                    select: {
-                        name: 1
-                    }
-                },
-                {
-                    path: "payloads",
-                    select: {
-                        customers: 1
-                    }
-                }
-            ]
-        }
-    });
+    // nechci stahovat lety pokazde
+    if ((await launches.count({})) > 50) {
+        console.log('Data from SpaceX API already loaded...');
+        return;
+    }
+
+    console.log('Loading data from SpaceX API...');
+    const response = await axios.post(SPACEX_API_URL, SPACEX_SEARCH_DATA);
+
+    if (response.status !== 200) {
+        const errorMsg = 'Error downloading data from SpaceX API';
+        console.log(errorMsg);
+
+        throw new Error(errorMsg);
+    }
 
     const launchDocs = response.data.docs;
     for (const launchDoc of launchDocs) {
         const payloads = launchDoc['payloads'];
-        const customers = payloads.flatMap(payload => payload.customers);
+        const rawCustomers = payloads.flatMap(payload => payload.customers);
+        // customer se muze opakovat u vice payloadu - proto taham unikatni hodnoty, tohle je nejcitsi zpusob:
+        const customers = [...new Set(rawCustomers)];
 
         const launch = {
             flightNumber: launchDoc['flight_number'],
@@ -55,6 +73,7 @@ async function loadLaunchesData() {
             customers,
         }
 
+        saveLaunch(launch);
         console.log(`${launch.flightNumber} ${launch.mission}`)
     }
 }
@@ -64,6 +83,12 @@ async function getAllLaunches() {
 }
 
 async function addNewLaunch(launch) {
+    const planet = await planets.findOne({ kepler_name: launch.destination });
+
+    if (!planet) {
+        throw new Error('No matching planet found!');
+    }
+
     const newFlightNumber = await getLatestFlightNumber() + 1;
 
     await saveLaunch(
@@ -94,12 +119,6 @@ async function deleteLaunch(flightNumber) {
 }
 
 async function saveLaunch(launch) {
-    const planet = await planets.findOne({ kepler_name: launch.destination });
-
-    if (!planet) {
-        throw new Error('No matching planet found!');
-    }
-
     try {
         // await launches.updateOne({flightNumber: launch.flightNumber}, launch, {upsert: true});
         // nevrati zpatky dalsi properties objektu v "$setOnInsert"
